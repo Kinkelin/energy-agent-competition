@@ -8,11 +8,19 @@ class BinaryExportWriter:
         self.strategies = strategies
 
     def write_step(self, time, agents, vegetation):
+        # Vegetation
+        self.file.write(vegetation.tobytes())
         return
 
     def write_header(self, terrain):
-        print(terrain)
+        # World size
+        self.file.write(terrain.shape[0].to_bytes(4, byteorder='little'))
+        self.file.write(terrain.shape[1].to_bytes(4, byteorder='little'))
+
+        # Terrain
         self.file.write(terrain.tobytes())
+
+
 
 
     def write_results(self, agents_total):

@@ -2,8 +2,11 @@ import numpy as np
 from Vegetation import Vegetation
 from Terrain import Terrain
 import random
+import math
 
 VEGETATION_CYCLE_DURATION = 100 # how long it takes to regrow bushes and ferns (during sim run the spawn chance will be divided by this constant)
+
+TERRAIN_PROBABILITY = [0.4,0.15,0.15,0.3]
 
 FRUIT_SPAWN_RATES = {}
 FRUIT_SPAWN_RATES[Vegetation.TREE.value] = 0.080
@@ -54,7 +57,26 @@ class WorldGenerator:
 
     def generate_terrain(self, world_size):
         self.indices = np.indices(world_size)
-        return np.random.randint(low=0, high=4, size=world_size, dtype=np.dtype('int8'))
+
+        # Weighted random noise generation
+        terrain = np.random.choice(np.arange(len(Terrain), dtype=np.dtype('int8')), size=world_size, p=TERRAIN_PROBABILITY)
+
+        #Smooth out biomes, multiple cellular automata algorithm passes
+        passes = 5
+        for i in range(passes):
+            threshold = math.ceil((16-i)/3)
+            threshold = 5
+            print("Cellular automata pass", i)
+            terrain_copy = np.copy(terrain)
+            for x in range(terrain.shape[0]):
+                for y in range(terrain.shape[1]):
+                    neighbour_occurances = np.bincount(area(terrain_copy, x-1,x+1,y-1,y+1).flatten())
+                    if neighbour_occurances.argmax() != terrain_copy[x,y]:
+                        terrain[x,y] = np.random.choice(np.arange(neighbour_occurances.size, dtype='int8'),p=neighbour_occurances/neighbour_occurances.sum())
+
+        #In the future we should upscale this to enlarge the size of inidivual biomes
+
+        return terrain
 
     def generate_vegetation(self, terrain):
         vegetation = np.full_like(terrain, Vegetation.NONE.value)
@@ -119,7 +141,8 @@ class WorldGenerator:
                     vegetation[fruit_x,fruit_y] = Vegetation.FRUIT.value
 
 
-
+def area(array,x1,x2,y1,y2):
+    return array[max(x1,0):min(x2,array.shape[0]-1),max(y1,0):min(y2,array.shape[1]-1)]
 
 def clamp(value, minimum, maximum):
     return max(minimum, min(value, maximum))
