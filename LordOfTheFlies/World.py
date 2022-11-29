@@ -11,7 +11,7 @@ from time import time
 # PARAMETERS
 
 WORLD_MAX_AGE = 1000
-WORLD_SIZE = (200, 200)
+WORLD_SIZE = (500, 500)
 
 # If True agents can walk around the world, if False they are boxed in
 # For Now Only False is implemented
@@ -263,19 +263,20 @@ class World:
 
     def simulate(self, writer):
         t = time()
-        writer.write_header(self.terrain)
-        writer.write_step(self.age, self.agents, self.vegetation) # step 0, initial situation
+        writer.write_header(self.terrain, self.vegetation)
+        writer.write_step(self.age, self.agents, self.vegetation, self.vegetation) # step 0, initial situation
         self.t_export_writer += time() - t
         print("Run simulation steps:")
         for i in tqdm(range(WORLD_MAX_AGE),file=sys.stdout):
+            old_vegetation = np.copy(self.vegetation)
             finished = self.step()
             t = time()
-            writer.write_step(self.age, self.agents, self.vegetation)
+            writer.write_step(self.age, self.agents, self.vegetation, old_vegetation)
             self.t_export_writer += time() - t
             if finished:
                 break
         t = time()
-        writer.write_results(self.agents_total)
+        writer.write_results()
         self.t_export_writer += time() - t
 
         print("t_make_turn", self.t_make_turn)
