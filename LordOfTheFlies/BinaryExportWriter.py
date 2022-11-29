@@ -76,8 +76,6 @@ class BinaryExportWriter:
             self.write_string(strategy.name, 64)
             self.write_string(strategy.author, 64)
 
-        return
-
     def write_short(self, n):
         self.write_number(n, byte_length=2)
 
@@ -88,7 +86,7 @@ class BinaryExportWriter:
         self.file.write(int(n).to_bytes(byte_length, byteorder='little', signed=signed))
 
     def write_string(self, text, fixed_byte_length):
-        self.file.write(text.ljust(fixed_byte_length).encode('ascii'))
+        self.file.write(text.ljust(fixed_byte_length)[0:fixed_byte_length].encode('ascii'))
 
     def write_byte(self, n, signed=True):
         self.write_number(n, byte_length=1, signed=signed)
@@ -97,4 +95,4 @@ class BinaryExportWriter:
         self.file.write(nparray.tobytes())
 
     def write_float(self, f):
-        return '{:032b}'.format(np.float32(f).view(np.int32))
+        self.file.write('{:032b}'.format(np.float32(f).view(np.int32)).encode('ascii'))
