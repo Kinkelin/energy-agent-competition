@@ -3,7 +3,7 @@ from enum import Enum
 
 class Vegetation(Enum):
     # Vegetation = id, energy_value, fruit_spawn_chance,
-    NONE = -1, None, None
+    NONE = 127, None, None
     TREE = 0, None, 0.12
     SEQUOIA = 1, None, 0.20
     FRUIT = 2, 20, None

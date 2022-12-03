@@ -8,7 +8,7 @@ from datetime import datetime
 from Strategy import Strategy
 from World import World, get_attempt_y, get_attempt_x
 from WorldGenerator import WorldGenerator
-from BinaryExportWriter import BinaryExportWriter
+from BinaryFileWriter import BinaryFileWriter
 import shutil
 import gzip
 
@@ -46,7 +46,7 @@ def run_simulation(out_directory, strategies):
     world = World(generator, strategies, AGENTS_PER_STRATEGY)
     os.makedirs(out_directory, exist_ok=True)
     with open(os.path.join(out_directory, EXPORT_FILE), 'wb') as export_file:
-        writer = BinaryExportWriter(export_file, strategies)
+        writer = BinaryFileWriter(export_file, strategies)
         world.simulate(writer)
 
 

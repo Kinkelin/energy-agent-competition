@@ -11,7 +11,7 @@ from time import time
 # PARAMETERS
 
 WORLD_MAX_AGE = 1000
-WORLD_SIZE = (500, 500)
+WORLD_SIZE = (512, 512)
 
 # If True agents can walk around the world, if False they are boxed in
 # For Now Only False is implemented

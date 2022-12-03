@@ -9,26 +9,26 @@ VEGETATION_CYCLE_DURATION = 100 # how long it takes to regrow bushes and ferns (
 TERRAIN_PROBABILITY = [0.4,0.15,0.15,0.3]
 
 FRUIT_SPAWN_RATES = {}
-FRUIT_SPAWN_RATES[Vegetation.TREE.value] = 0.080
-FRUIT_SPAWN_RATES[Vegetation.SEQUOIA.value] = 0.160
+FRUIT_SPAWN_RATES[Vegetation.TREE.value] = 0.040
+FRUIT_SPAWN_RATES[Vegetation.SEQUOIA.value] = 0.080
 
 SPAWN_RATES = {}
 for t in Terrain:
     SPAWN_RATES[t.value] = {}
 
-SPAWN_RATES[Terrain.PLAIN.value][Vegetation.TREE.value] = 0.025
-SPAWN_RATES[Terrain.PLAIN.value][Vegetation.BUSH.value] = 0.120
+SPAWN_RATES[Terrain.PLAIN.value][Vegetation.TREE.value] = 0.015
+SPAWN_RATES[Terrain.PLAIN.value][Vegetation.BUSH.value] = 0.0520
 
-SPAWN_RATES[Terrain.JUNGLE.value][Vegetation.TREE.value] = 0.030
-SPAWN_RATES[Terrain.JUNGLE.value][Vegetation.SEQUOIA.value] = 0.020
-SPAWN_RATES[Terrain.JUNGLE.value][Vegetation.BUSH.value] = 0.150
-SPAWN_RATES[Terrain.JUNGLE.value][Vegetation.FERN.value] = 0.200
+SPAWN_RATES[Terrain.JUNGLE.value][Vegetation.TREE.value] = 0.015
+SPAWN_RATES[Terrain.JUNGLE.value][Vegetation.SEQUOIA.value] = 0.010
+SPAWN_RATES[Terrain.JUNGLE.value][Vegetation.BUSH.value] = 0.075
+SPAWN_RATES[Terrain.JUNGLE.value][Vegetation.FERN.value] = 0.100
 
-SPAWN_RATES[Terrain.MOUNTAIN.value][Vegetation.TREE.value] = 0.015
-SPAWN_RATES[Terrain.MOUNTAIN.value][Vegetation.BUSH.value] = 0.050
+SPAWN_RATES[Terrain.MOUNTAIN.value][Vegetation.TREE.value] = 0.0075
+SPAWN_RATES[Terrain.MOUNTAIN.value][Vegetation.BUSH.value] = 0.025
 
-SPAWN_RATES[Terrain.DESERT.value][Vegetation.BUSH.value] = 0.005
-SPAWN_RATES[Terrain.DESERT.value][Vegetation.CACTUS.value] = 0.010
+SPAWN_RATES[Terrain.DESERT.value][Vegetation.BUSH.value] = 0.0025
+SPAWN_RATES[Terrain.DESERT.value][Vegetation.CACTUS.value] = 0.005
 
 class WorldGenerator:
 
@@ -58,24 +58,22 @@ class WorldGenerator:
     def generate_terrain(self, world_size):
         self.indices = np.indices(world_size)
 
-        # Weighted random noise generation
-        terrain = np.random.choice(np.arange(len(Terrain), dtype=np.dtype('int8')), size=world_size, p=TERRAIN_PROBABILITY)
+        scale_passes = 4
+        initial_scale = 2**scale_passes
+        initial_size = (world_size[0] // initial_scale, world_size[1] // initial_scale)
+        print("Initial random noise generation with size", initial_size)
+        # Weighted random noise generation initially
+        terrain = np.random.choice(np.arange(len(Terrain), dtype=np.dtype('int8')), size=initial_size, p=TERRAIN_PROBABILITY)
 
-        #Smooth out biomes, multiple cellular automata algorithm passes
-        passes = 5
-        for i in range(passes):
-            threshold = math.ceil((16-i)/3)
-            threshold = 5
-            print("Cellular automata pass", i)
-            terrain_copy = np.copy(terrain)
-            for x in range(terrain.shape[0]):
-                for y in range(terrain.shape[1]):
-                    neighbour_occurances = np.bincount(area(terrain_copy, x-1,x+1,y-1,y+1).flatten())
-                    if neighbour_occurances.argmax() != terrain_copy[x,y]:
-                        terrain[x,y] = np.random.choice(np.arange(neighbour_occurances.size, dtype='int8'),p=neighbour_occurances/neighbour_occurances.sum())
+        # Scaling and smoothing to create large connected biomes
+        for i in range(scale_passes):
+            terrain = smooth_terrain(terrain)
+            terrain = upscale_terrain(terrain)
 
-        #In the future we should upscale this to enlarge the size of inidivual biomes
-
+        finishing_smooth_passes = 2
+        for i in range(finishing_smooth_passes):
+            terrain = smooth_terrain(terrain)
+        print("Terrain generation finished, final size",terrain.shape)
         return terrain
 
     def generate_vegetation(self, terrain):
@@ -146,3 +144,15 @@ def area(array,x1,x2,y1,y2):
 
 def clamp(value, minimum, maximum):
     return max(minimum, min(value, maximum))
+
+def smooth_terrain(terrain):
+    terrain_copy = np.copy(terrain)
+    for x in range(terrain.shape[0]):
+        for y in range(terrain.shape[1]):
+            neighbour_occurances = np.bincount(area(terrain_copy, x-1,x+1,y-1,y+1).flatten())
+            if neighbour_occurances.argmax() != terrain_copy[x,y]:
+                terrain[x,y] = np.random.choice(np.arange(neighbour_occurances.size, dtype='int8'),p=neighbour_occurances/neighbour_occurances.sum())
+    return terrain
+
+def upscale_terrain(terrain):
+    return np.kron(terrain,np.full((2,2), 1))

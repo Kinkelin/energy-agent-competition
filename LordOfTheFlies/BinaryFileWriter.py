@@ -2,7 +2,7 @@ import numpy as np
 
 VERSION = 1
 
-class BinaryExportWriter:
+class BinaryFileWriter:
 
     def __init__(self, file, strategies):
         self.file = file
@@ -40,6 +40,16 @@ class BinaryExportWriter:
 
 
     def write_header(self, terrain, vegetation):
+        #terrain = terrain.copy()
+       # terrain.astype(np.uint8)
+       # terrain[0,0] = 17
+       # terrain[1,0] = 5
+       # terrain[0,1] = 5
+       # terrain[511,511] = 20
+       # vegetation = vegetation.copy()
+       # vegetation[0,0] = 17
+       # vegetation[1,0] = 5
+      #  vegetation[511,511] = 20
 
         # Human readable title
         self.write_string("Simulation export file", 64)

@@ -14,3 +14,8 @@ enum vegetation_types {
 	fern,
 	cactus
 }
+
+view_x = 0;
+view_y = 0;
+
+x = 0;
